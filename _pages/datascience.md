@@ -1,7 +1,7 @@
 ___
 layout: archive
 permalink: /data-science/
-title: "Data Science"
+title: "Data Science Posts"
 author_profile: true
 
 ___
