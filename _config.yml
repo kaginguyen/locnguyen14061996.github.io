@@ -108,7 +108,7 @@ analytics:
 # Site Author
 author:
   name             : "Loc Nguyen Huu"
-  avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  avatar           : "/images/avatar.png" # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "I am an **amazing** person."
   location         : "Ho Chi Minh, VN"
   email            : "loc.nguyen14061996@gmail.com"
