@@ -3,7 +3,7 @@ title: "About"
 permalink: /about/
 ---
 
-<img src="/images/about.jpg" alt="Me" title="Me" width="400" height="300" data-rotate="90"/>
+<img src="/images/about.jpg" alt="Me" title="Me" width="400" height="300" data-rotate="180"/>
 
 Hi, my name is Loc, Senior Data Analyst at Lazada E-Logistics Vietnam. 
 
