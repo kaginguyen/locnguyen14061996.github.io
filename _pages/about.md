@@ -6,7 +6,7 @@ permalink: /about/
 <img src="/images/about.jpg" alt="Me" title="Me" width="1280" height="854" class="image-popup"/>
 
 <p style="font-size: 80%;"> 
-Hi, my name is Loc, currentl I am working as Senior Data Analyst at Lazada E-Logistics Vietnam. 
+Hi, my name is Loc, currently I am working as Senior Data Analyst at Lazada E-Logistics Vietnam. 
 </p>
 
 <p style="font-size: 80%;"> 
