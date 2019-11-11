@@ -10,7 +10,7 @@ If you have every working with PostgreSQL, you would have known that there are n
 Most average SQL users may never know about MV, but if they are using PostgreSQL for a while, high chance they already use it without knowing. Common Table Expression (CTE) or usually known as the "WITH ... AS" method is a well-known method that creates temporary table that can be re-used multiple times and help improve the cleanliness of the script that usually get super fuzzy due to the sub-query. The reason why I mentions CTE here is because CTE actually create a hidden MV that is removed right after the query is finalized. MV allows CTE to be faster when the temporary table gets larger and more complicated. 
 <br>
 
-So now we know MT is important, lets look into the issue created due to the uniqueness of MV, which is Relationship. Let's setup a simple sitation, we have a table `player_detail` that stores football players' name and their unique ID that are crawled from www.futbin.com. 
+So now we know MV is important, lets look into the issue created due to the uniqueness of MV, which is Relationship. Let's setup a simple sitation, we have a table `player_detail` that stores football players' name and their unique ID that are crawled from www.futbin.com. 
 
 player_id | player_name
 --- | ---
@@ -34,7 +34,10 @@ AND     player_name LIKE 'C%'
 ```
 <br>
 
-With this, the MV `player_named_c`sets a relationship with table `player_detail` so that even if we change its name into `player_detail_v2`, the MV will still remembers the relationship and change the query accordingly. Quite convenient, right? It is surely a simple way to right your temporary tables, especially if you are using it in different procedure. Changing the normal table is easy, but new problem arises, if you want to change the logic or add a new column or conditions into the MV, you will need to drop it and rebuild it, here is how: 
+With this, the MV `player_named_c`sets a relationship with table `player_detail` so that even if we change its name into `player_detail_v2`, the MV will still remembers the relationship and change the query accordingly. Quite convenient, right? It is surely a simple way to write your temporary tables, especially if you are using it in different procedure but you dont want to re-run it every time. 
+<br>
+
+So changing the normal table is easy, but new problem arises, if you want to change the logic or add a new column or conditions into the MV, you will need to drop it and rebuild it, here is how: 
 
 ```sql
 DROP MATERIALIZED VIEW IF EXIST data_sch.player_named_c;
@@ -62,6 +65,9 @@ AND     LENGTH(player_name) > 20
 ```
 <br>
 
-Now, the trouble will start to arises, so if you start to realize that you also want players with not just first name but also last name starting with "C", and you want to change the `player_named_c` table, you do the DROP and CREATE, but you encounter an issue as follow: 
+Now, the trouble will start to arises, so if you start to realize that you also want players with not just first name but also last name starting with "C", and you want to change the logic of `player_named_c` , you do the DROP and CREATE, but you encounter an issue as follow: 
 
 `ERROR: cannot drop materialized view player_named_c because other objects depend on it`
+<br>
+
+Due to the relationship that `player_named_c_v2` set with `player_named_c`, it is now *impossible* to change the logic of `player_named_c` without re-building everything. When I say everything, I actually mean it, you will now have to DROP both MVs, rebuild `player_named_c` first then `player_named_c_v2`. And that is just 2 levels of relationship. Now, imagine we have more levels, with more complicated relationship, such as a MV at level 3, requiring data of a MV level 1 and a MV of level 2 and a normal table. 
