@@ -15,7 +15,7 @@ Most average SQL users may never know about MV, but if they are using PostgreSQL
 <div style="text-align: justify">
 So now we know MT is important, lets look into the issue created due to the uniqueness of MV, which is Relationship. Let's setup a simple sitation, we have a table `player_detail` that stores football players' name and their unique ID that are crawled from www.futbin.com. 
 </div>
-<br>
+
 player_id | player_name
 --- | ---
 1 | Cristiano Ronaldo
