@@ -1,7 +1,7 @@
 ---
 title: "Re-build Materialized View with Relationship"
 date: 2019-11-09
-tags: [Data Science][PostgreSQL]
+tags: [Data Science, PostgreSQL]
 ---
 
 If you have every working with PostgreSQL, you would have known that there are numerous wonderful features that other SQL servers would be jealous. However, due to its level of advanceness, there are also a different set of issues on its own, and one of them is the relationship between Materialized View (MV), which is a well-known feature of PostgreSQL. 
