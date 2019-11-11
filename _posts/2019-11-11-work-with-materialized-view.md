@@ -1,5 +1,5 @@
 ---
-title: "Working with Table Relationship of PostgreSQL Materialized View"
+title: "Re-build Materialized View having Relationship"
 date: 2019-11-11
 tags: [Data Science][PosgreSQL]
 ---
