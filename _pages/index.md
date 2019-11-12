@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: pages
 title: Tags
 comments: false
 permalink: /tag_v2/
