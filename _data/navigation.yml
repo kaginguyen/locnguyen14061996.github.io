@@ -8,6 +8,8 @@ main:
     url: /tags/
   - title: "Post by Years"
     url: /year-archive/
+  - title: "Tags v2"
+    url: /tag_v2/
   # - title: "Sample Collections"
   #   url: /collection-archive/
   # - title: "Sitemap"
