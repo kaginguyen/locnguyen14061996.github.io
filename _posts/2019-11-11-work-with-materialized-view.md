@@ -110,10 +110,17 @@ For some people, it can be difficult to understand explanation like that. Theref
 <br>
 
 ```python 
+# This pyool package is built by me simplify working with PostgreSQL
+# psycopg2 is recommended if you dont want to use my package
 from pyool import PostgreSQLConnector 
 
 db = PostgreSQLConnector()
-db.connect()
+db.connect(host = ""
+        , port = "5432"
+        , db = ""
+        , user = ""
+        , passwd = "")
+
 mv_list_query = """
                 SELECT 
                         DISTINCT view_cs.nspname
@@ -131,9 +138,11 @@ mv_list_query = """
                 WHERE   1=1
                 AND     view_d.deptype = 'n'
                 """
+
 df = db.run_query(mv_list_query, return_data = True)
+
 
 ```
 <br>
 
-Minor note, there is a strange package pyool which is built by me in order to simplify the task of running PostgreSQL jobs, you can use psycopg2 for better control. 
+
