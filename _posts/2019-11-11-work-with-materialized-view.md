@@ -122,21 +122,53 @@ db.connect(host = ""
         , passwd = "")
 
 mv_list_query = """
+                WITH t1 AS (
                 SELECT 
-                        DISTINCT view_cs.nspname
-                        , view_c.relname
-                        , tab_cs.nspname
-                        , tab_c.relname
-                FROM    pg_depend view_d
-                JOIN    pg_class view_c ON view_c.oid = view_d.refobjid AND view_c.relkind = 'm'
-                JOIN    pg_type view_ct ON view_ct.oid = view_c.reltype
-                JOIN    pg_namespace view_cs ON view_cs.oid = view_ct.typnamespace
-                JOIN    pg_depend tab_d ON tab_d.objid = view_d.objid
-                JOIN    pg_class tab_c ON tab_c.oid = tab_d.refobjid AND tab_c.relkind = 'r'
-                JOIN    pg_type tab_ct ON tab_ct.oid = tab_c.reltype
-                JOIN    pg_namespace tab_cs ON tab_cs.oid = tab_ct.typnamespace
-                WHERE   1=1
-                AND     view_d.deptype = 'n'
+                                dependent_ns.nspname as dependent_schema
+                                , dependent_view.relname as dependent_view 
+                                , source_ns.nspname as source_schema
+                                , source_table.relname as source_table
+                FROM pg_depend 
+                JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid 
+                JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid 
+                JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid 
+                JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid 
+                AND pg_depend.refobjsubid = pg_attribute.attnum 
+                JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+                JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
+                WHERE 	        1=1
+                -- Make changes here to get MVs from other schema
+                AND 		source_ns.nspname = 'dashboard_sch'
+                GROUP BY 1,2,3,4
+                ORDER BY 1,2
+                )
+
+                , t2 AS (
+                SELECT 
+                                                materialized_view_name 
+                                                , source_table 
+                                                , CASE 
+                                                                WHEN source_table IN (SELECT dependent_view FROM t1) THEN 1 
+                                                                ELSE 0 
+                                                END AS source_as_view 
+                                                , definition 
+                FROM 		dashboard_sch.materialized_view_list mv 
+                LEFT JOIN t1 ON mv.materialized_view_name = t1.dependent_view 
+                WHERE 	1=1
+                AND 		is_in_fc_engine IS NOT NULL 
+                )
+
+                SELECT 
+                                                materialized_view_name
+                                                , definition 
+                                                , STRING_AGG(CASE WHEN source_as_view = 1 THEN source_table::TEXT ELSE NULL END, ',') AS source_materialized_view
+                -- 				, STRING_AGG(CASE WHEN source_as_view = 0 THEN source_table::TEXT ELSE NULL END, ',') AS source_table
+                -- 				, STRING_AGG(source_as_view::TEXT, ',') AS source_as_view
+                                                
+                FROM 		t2 
+
+                GROUP BY 1,2 
+                ORDER BY STRING_AGG(source_as_view::TEXT, ',')
                 """
 
 df = db.run_query(mv_list_query, return_data = True)
