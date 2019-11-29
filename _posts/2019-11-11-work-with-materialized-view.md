@@ -1,5 +1,5 @@
 ---
-title: "Re-build Materialized View with Relationship"
+title: "Re-build Materialized View with Relationship Constraint"
 date: 2019-11-11
 tags: [Data Science, PostgreSQL]
 ---
