@@ -106,72 +106,57 @@ Now we have our list of base MVs. From this, the idea is to run a loop (of cours
 Now we know the order of re-building MVs, we need to aware that we need to DROP all MVs first, so we need to have the logic of the MVs stored somewhere, luckily in my query, the query used to build the MV are also available, so when writing your script, take advantage of that. And if you want to change the logic of a MV, do it during the process of re-building, and that is it. 
 <br> 
 
-For some people, it can be difficult to understand explanation like that. Therefore, let's talk in programming language, here is my Python scripts that I use to do the re-building:
+Here is the SQL script to get the necessary data for the solution. Good luck solving your issue. 
 <br>
 
-```python 
-# This pyool package is built by me simplify working with PostgreSQL
-# psycopg2 is recommended if you dont want to use my package
-from pyool import PostgreSQLConnector 
+```sql
+WITH t1 AS (
+SELECT 
+                dependent_ns.nspname as dependent_schema
+                , dependent_view.relname as dependent_view 
+                , source_ns.nspname as source_schema
+                , source_table.relname as source_table
+FROM pg_depend 
+JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid 
+JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid 
+JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid 
+JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid 
+AND pg_depend.refobjsubid = pg_attribute.attnum 
+JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
+WHERE 	        1=1
+-- Make changes here to get MVs from other schema
+AND 		source_ns.nspname = 'your_scheme'
+GROUP BY 1,2,3,4
+ORDER BY 1,2
+)
 
-db = PostgreSQLConnector()
-db.connect(host = ""
-        , port = "5432"
-        , db = ""
-        , user = ""
-        , passwd = "")
+, t2 AS (
+SELECT 
+                                materialized_view_name 
+                                , source_table 
+                                , CASE 
+                                                WHEN source_table IN (SELECT dependent_view FROM t1) THEN 1 
+                                                ELSE 0 
+                                END AS source_as_view 
+                                , definition 
+FROM 		your_scheme.materialized_view_list mv 
+LEFT JOIN t1 ON mv.materialized_view_name = t1.dependent_view 
+WHERE 	1=1
+AND 		is_in_fc_engine IS NOT NULL 
+)
 
-mv_list_query = """
-                WITH t1 AS (
-                SELECT 
-                                dependent_ns.nspname as dependent_schema
-                                , dependent_view.relname as dependent_view 
-                                , source_ns.nspname as source_schema
-                                , source_table.relname as source_table
-                FROM pg_depend 
-                JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid 
-                JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid 
-                JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid 
-                JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid 
-                AND pg_depend.refobjsubid = pg_attribute.attnum 
-                JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
-                JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
-                WHERE 	        1=1
-                -- Make changes here to get MVs from other schema
-                AND 		source_ns.nspname = 'dashboard_sch'
-                GROUP BY 1,2,3,4
-                ORDER BY 1,2
-                )
+SELECT 
+                                materialized_view_name
+                                , definition 
+                                , STRING_AGG(CASE WHEN source_as_view = 1 THEN source_table::TEXT ELSE NULL END, ',') AS source_materialized_view
+-- 				, STRING_AGG(CASE WHEN source_as_view = 0 THEN source_table::TEXT ELSE NULL END, ',') AS source_table
+-- 				, STRING_AGG(source_as_view::TEXT, ',') AS source_as_view
+                                
+FROM 		t2 
 
-                , t2 AS (
-                SELECT 
-                                                materialized_view_name 
-                                                , source_table 
-                                                , CASE 
-                                                                WHEN source_table IN (SELECT dependent_view FROM t1) THEN 1 
-                                                                ELSE 0 
-                                                END AS source_as_view 
-                                                , definition 
-                FROM 		dashboard_sch.materialized_view_list mv 
-                LEFT JOIN t1 ON mv.materialized_view_name = t1.dependent_view 
-                WHERE 	1=1
-                AND 		is_in_fc_engine IS NOT NULL 
-                )
-
-                SELECT 
-                                                materialized_view_name
-                                                , definition 
-                                                , STRING_AGG(CASE WHEN source_as_view = 1 THEN source_table::TEXT ELSE NULL END, ',') AS source_materialized_view
-                -- 				, STRING_AGG(CASE WHEN source_as_view = 0 THEN source_table::TEXT ELSE NULL END, ',') AS source_table
-                -- 				, STRING_AGG(source_as_view::TEXT, ',') AS source_as_view
-                                                
-                FROM 		t2 
-
-                GROUP BY 1,2 
-                ORDER BY STRING_AGG(source_as_view::TEXT, ',')
-                """
-
-df = db.run_query(mv_list_query, return_data = True)
+GROUP BY 1,2 
+ORDER BY STRING_AGG(source_as_view::TEXT, ',')
 
 
 ```
